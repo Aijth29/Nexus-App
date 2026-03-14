@@ -4,6 +4,71 @@ import { useState } from "react";
 
 export default function AuthPage() {
   const [tab, setTab] = useState<"login" | "signup">("login");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [signupEmail, setSignupEmail] = useState("");
+  const [signupPassword, setSignupPassword] = useState("");
+  const [workspaceName, setWorkspaceName] = useState("");
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  const handleSignup = async () => {
+    setLoading(true);
+    setError("");
+    setSuccess("");
+    try {
+      const res = await fetch("/api/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: firstName + " " + lastName,
+          email: signupEmail,
+          password: signupPassword,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setSuccess("Account created! Please login.");
+        setTab("login");
+        setFirstName("");
+        setLastName("");
+        setSignupEmail("");
+        setSignupPassword("");
+        setWorkspaceName("");
+      } else {
+        setError(data.error);
+      }
+    } catch (err) {
+      setError("Something went wrong. Please try again.");
+    }
+    setLoading(false);
+  };
+
+  const handleLogin = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const res = await fetch("/api/auth/callback/credentials", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: loginEmail,
+          password: loginPassword,
+        }),
+      });
+      if (res.ok) {
+        window.location.href = "/dashboard";
+      } else {
+        setError("Invalid email or password");
+      }
+    } catch (err) {
+      setError("Something went wrong. Please try again.");
+    }
+    setLoading(false);
+  };
 
   return (
     <div style={{
@@ -30,8 +95,6 @@ export default function AuthPage() {
         * { box-sizing: border-box; margin: 0; padding: 0; }
         :root { --purple: #6c5ce7; --pink: #e84393; --cyan: #0099cc; --text: #0a0814; --muted: #6b6b8a; }
         .auth-wrap { display: grid; grid-template-columns: 1fr 1fr; width: 100%; max-width: 880px; border-radius: 20px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.4); background: #fff; position: relative; z-index: 1; }
-
-        /* LEFT */
         .auth-left { background: linear-gradient(145deg, #6c5ce7, #e84393 60%, #0099cc); padding: 2.5rem; display: flex; flex-direction: column; justify-content: space-between; min-height: 580px; position: relative; overflow: hidden; }
         .auth-left::before { content: ''; position: absolute; top: -80px; right: -80px; width: 300px; height: 300px; border-radius: 50%; background: rgba(255,255,255,0.07); }
         .auth-left::after { content: ''; position: absolute; bottom: -60px; left: -40px; width: 250px; height: 250px; border-radius: 50%; background: rgba(255,255,255,0.04); }
@@ -42,31 +105,21 @@ export default function AuthPage() {
         .l-feat-item { display: flex; align-items: center; gap: 10px; font-size: 13px; color: rgba(255,255,255,0.88); font-weight: 300; font-family: 'DM Sans', sans-serif; }
         .l-feat-ico { width: 28px; height: 28px; border-radius: 7px; background: rgba(255,255,255,0.15); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
         .l-bottom { font-size: 11px; color: rgba(255,255,255,0.4); position: relative; z-index: 1; font-family: 'DM Sans', sans-serif; }
-
-        /* RIGHT */
         .auth-right { background: #fff; padding: 2.5rem; display: flex; flex-direction: column; justify-content: center; font-family: 'DM Sans', sans-serif; }
         .r-icon { display: flex; justify-content: flex-end; margin-bottom: 6px; }
         .r-title { font-family: 'Syne', sans-serif; font-size: 30px; font-weight: 800; color: var(--purple); margin-bottom: 4px; }
         .r-sub { font-size: 13px; color: #999; margin-bottom: 1.5rem; font-weight: 300; }
-
-        /* TOGGLE */
         .tog { display: flex; gap: 10px; margin-bottom: 1.5rem; }
         .tog-btn { flex: 1; padding: 11px; border: 2px solid #eee; border-radius: 12px; font-size: 14px; font-weight: 500; cursor: pointer; font-family: 'DM Sans', sans-serif; color: #aaa; background: #fff; transition: all .2s; }
         .tog-btn:hover { border-color: rgba(108,92,231,0.3); }
         .tog-btn.act-login { background: linear-gradient(135deg, #6c5ce7, #e84393); color: #fff; border-color: transparent; box-shadow: 0 4px 14px rgba(108,92,231,0.3); }
         .tog-btn.act-signup { background: linear-gradient(135deg, #e84393, #0099cc); color: #fff; border-color: transparent; box-shadow: 0 4px 14px rgba(232,67,147,0.3); }
-
-        /* SOCIAL */
-        .soc-row { display: flex; justify-content: center; gap: 12px; margin-top: 0.75rem; margin-bottom: 0; }
+        .soc-row { display: flex; justify-content: center; gap: 12px; margin-top: 0.75rem; }
         .soc-btn { width: 42px; height: 42px; border-radius: 50%; border: 1.5px solid #e8eeff; background: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all .2s; }
         .soc-btn:hover { border-color: var(--purple); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(108,92,231,0.15); }
-
-        /* OR */
         .or { text-align: center; font-size: 12px; color: #ccc; margin: .75rem 0; position: relative; }
         .or::before, .or::after { content: ''; position: absolute; top: 50%; width: 40%; height: 1px; background: #eee; }
         .or::before { left: 0; } .or::after { right: 0; }
-
-        /* FORM */
         .fg { margin-bottom: .875rem; }
         .fl { display: block; font-size: 12px; font-weight: 500; color: #888; margin-bottom: 4px; }
         .iw { position: relative; display: flex; align-items: center; }
@@ -78,11 +131,14 @@ export default function AuthPage() {
         .forgot { display: block; text-align: right; font-size: 12px; color: var(--purple); cursor: pointer; font-weight: 500; margin: .25rem 0 .875rem; }
         .sub-btn { width: 100%; padding: 12px; background: linear-gradient(135deg, #6c5ce7, #e84393); color: #fff; border: none; border-radius: 10px; font-size: 14px; font-weight: 500; cursor: pointer; font-family: 'DM Sans', sans-serif; box-shadow: 0 4px 14px rgba(108,92,231,0.25); transition: opacity .2s; }
         .sub-btn:hover { opacity: .87; }
+        .sub-btn:disabled { opacity: .6; cursor: not-allowed; }
         .sub-btn.s2 { background: linear-gradient(135deg, #e84393, #0099cc); }
         .sw { text-align: center; font-size: 13px; color: #aaa; margin-top: 1rem; font-weight: 300; }
         .sw a { color: var(--purple); font-weight: 600; cursor: pointer; text-decoration: none; }
         .terms { font-size: 11px; color: #ccc; text-align: center; margin-top: .6rem; line-height: 1.5; }
         .terms a { color: var(--purple); text-decoration: none; }
+        .error-msg { color: #e84393; font-size: 12px; margin-bottom: 8px; text-align: center; background: #ffeaf5; padding: 8px 12px; border-radius: 8px; }
+        .success-msg { color: #00b894; font-size: 12px; margin-bottom: 8px; text-align: center; background: #e0fff6; padding: 8px 12px; border-radius: 8px; }
       `}</style>
 
       <div className="auth-wrap">
@@ -132,9 +188,13 @@ export default function AuthPage() {
 
           {/* TOGGLE */}
           <div className="tog">
-            <button className={`tog-btn ${tab === "login" ? "act-login" : ""}`} onClick={() => setTab("login")}>Log in</button>
-            <button className={`tog-btn ${tab === "signup" ? "act-signup" : ""}`} onClick={() => setTab("signup")}>Sign up</button>
+            <button className={`tog-btn ${tab === "login" ? "act-login" : ""}`} onClick={() => { setTab("login"); setError(""); setSuccess(""); }}>Log in</button>
+            <button className={`tog-btn ${tab === "signup" ? "act-signup" : ""}`} onClick={() => { setTab("signup"); setError(""); setSuccess(""); }}>Sign up</button>
           </div>
+
+          {/* ERROR / SUCCESS */}
+          {error && <div className="error-msg">{error}</div>}
+          {success && <div className="success-msg">{success}</div>}
 
           {/* LOGIN FORM */}
           {tab === "login" && (
@@ -143,18 +203,20 @@ export default function AuthPage() {
                 <label className="fl">Email address</label>
                 <div className="iw">
                   <span className="ii"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#bbb" strokeWidth="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 7 10-7"/></svg></span>
-                  <input type="email" className="fi" placeholder="you@company.com" />
+                  <input type="email" className="fi" placeholder="you@company.com" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} />
                 </div>
               </div>
               <div className="fg">
                 <label className="fl">Password</label>
                 <div className="iw">
                   <span className="ii"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#bbb" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg></span>
-                  <input type="password" className="fi" placeholder="••••••••••••" />
+                  <input type="password" className="fi" placeholder="••••••••••••" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} />
                 </div>
               </div>
               <a className="forgot">Forgot your password?</a>
-              <button className="sub-btn">Sign in to Nexus</button>
+              <button className="sub-btn" onClick={handleLogin} disabled={loading}>
+                {loading ? "Signing in..." : "Sign in to Nexus"}
+              </button>
               <div className="or" style={{marginTop: "1rem"}}>OR</div>
               <div className="soc-row">
                 <div className="soc-btn">
@@ -164,7 +226,7 @@ export default function AuthPage() {
                   <svg width="17" height="17" viewBox="0 0 24 24" fill="#0a0814"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
                 </div>
               </div>
-              <div className="sw">Don&apos;t have an account? <a onClick={() => setTab("signup")}>Register Now</a></div>
+              <div className="sw">Don&apos;t have an account? <a onClick={() => { setTab("signup"); setError(""); }}>Register Now</a></div>
             </>
           )}
 
@@ -176,14 +238,14 @@ export default function AuthPage() {
                   <label className="fl">First name</label>
                   <div className="iw">
                     <span className="ii"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#bbb" strokeWidth="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg></span>
-                    <input type="text" className="fi" placeholder="John" />
+                    <input type="text" className="fi" placeholder="John" value={firstName} onChange={(e) => setFirstName(e.target.value)} />
                   </div>
                 </div>
                 <div className="fg">
                   <label className="fl">Last name</label>
                   <div className="iw">
                     <span className="ii"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#bbb" strokeWidth="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg></span>
-                    <input type="text" className="fi" placeholder="Doe" />
+                    <input type="text" className="fi" placeholder="Doe" value={lastName} onChange={(e) => setLastName(e.target.value)} />
                   </div>
                 </div>
               </div>
@@ -191,24 +253,26 @@ export default function AuthPage() {
                 <label className="fl">Email address</label>
                 <div className="iw">
                   <span className="ii"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#bbb" strokeWidth="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 7 10-7"/></svg></span>
-                  <input type="email" className="fi" placeholder="you@company.com" />
+                  <input type="email" className="fi" placeholder="you@company.com" value={signupEmail} onChange={(e) => setSignupEmail(e.target.value)} />
                 </div>
               </div>
               <div className="fg">
                 <label className="fl">Password</label>
                 <div className="iw">
                   <span className="ii"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#bbb" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg></span>
-                  <input type="password" className="fi" placeholder="Min. 8 characters" />
+                  <input type="password" className="fi" placeholder="Min. 6 characters" value={signupPassword} onChange={(e) => setSignupPassword(e.target.value)} />
                 </div>
               </div>
               <div className="fg">
                 <label className="fl">Workspace name</label>
                 <div className="iw">
                   <span className="ii"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#bbb" strokeWidth="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg></span>
-                  <input type="text" className="fi" placeholder="My Team" />
+                  <input type="text" className="fi" placeholder="My Team" value={workspaceName} onChange={(e) => setWorkspaceName(e.target.value)} />
                 </div>
               </div>
-              <button className="sub-btn s2">Create your account</button>
+              <button className="sub-btn s2" onClick={handleSignup} disabled={loading}>
+                {loading ? "Creating account..." : "Create your account"}
+              </button>
               <div className="or" style={{marginTop: "1rem"}}>OR</div>
               <div className="soc-row">
                 <div className="soc-btn">
@@ -218,7 +282,7 @@ export default function AuthPage() {
                   <svg width="17" height="17" viewBox="0 0 24 24" fill="#0a0814"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
                 </div>
               </div>
-              <div className="sw">Already have an account? <a onClick={() => setTab("login")}>Login Now</a></div>
+              <div className="sw">Already have an account? <a onClick={() => { setTab("login"); setError(""); }}>Login Now</a></div>
               <div className="terms">By signing up you agree to our <a>Terms</a> and <a>Privacy Policy</a></div>
             </>
           )}
