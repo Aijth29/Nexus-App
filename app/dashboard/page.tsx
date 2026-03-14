@@ -407,8 +407,8 @@ const TaskModal = ({ task, onClose }: { task: Task | null; onClose: () => void }
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 const NAV_ROUTES: Record<string, string> = {
+  Home: "/",
   Dashboard: "/dashboard",
-  Tasks: "/dashboard",
   Chat: "/chat",
   Docs: "/docs",
   Analytics: "/analytics",
@@ -465,8 +465,8 @@ export default function KanbanPage() {
           </div>
 
           {[
-            { icon: "▦", label: "Dashboard", badge: null, active: false },
-            { icon: "☰", label: "Tasks", badge: "12", active: true },
+            { icon: "🏠", label: "Home", badge: null, active: false },
+            { icon: "▦", label: "Dashboard", badge: null, active: true },
             { icon: "💬", label: "Chat", badge: "3", active: false },
             { icon: "📄", label: "Docs", badge: null, active: false },
             { icon: "📊", label: "Analytics", badge: null, active: false },
