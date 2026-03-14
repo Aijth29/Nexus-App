@@ -189,6 +189,7 @@ export default function HomePage() {
           <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 22, fontWeight: 800, color: "#fff", marginBottom: "1.5rem", padding: "0 0.5rem", position: "relative", zIndex: 1 }}>Nexus</div>
           {[
             { icon: "🏠", label: "Home",      badge: null, active: true,  href: "/"          },
+            { icon: "▦",  label: "Dashboard", badge: null, active: false, href: "/dashboard" },
             { icon: "☰",  label: "Tasks",     badge: "12", active: false, href: "/dashboard" },
             { icon: "💬", label: "Chat",      badge: "3",  active: false, href: "/chat"      },
             { icon: "📄", label: "Docs",      badge: null, active: false, href: "#"          },
