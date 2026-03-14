@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { signIn } from "next-auth/react";
 
 export default function AuthPage() {
   const [tab, setTab] = useState<"login" | "signup">("login");
@@ -51,15 +52,12 @@ export default function AuthPage() {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch("/api/auth/callback/credentials", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: loginEmail,
-          password: loginPassword,
-        }),
+      const res = await signIn("credentials", {
+        email: loginEmail,
+        password: loginPassword,
+        redirect: false,
       });
-      if (res.ok) {
+      if (res?.ok) {
         window.location.href = "/dashboard";
       } else {
         setError("Invalid email or password");
