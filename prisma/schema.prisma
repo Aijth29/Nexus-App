@@ -16,6 +16,7 @@ model User {
   updatedAt     DateTime  @updatedAt
   members       Member[]
   accounts      Account[]
+  messages      Message[]
 }
 
 model Account {
@@ -50,4 +51,13 @@ model Member {
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   @@unique([userId, workspaceId])
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  content   String
+  createdAt DateTime @default(now())
+  userId    String
+  roomId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -405,7 +406,16 @@ const TaskModal = ({ task, onClose }: { task: Task | null; onClose: () => void }
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
+const NAV_ROUTES: Record<string, string> = {
+  Dashboard: "/dashboard",
+  Tasks: "/dashboard",
+  Chat: "/chat",
+  Docs: "/docs",
+  Analytics: "/analytics",
+};
+
 export default function KanbanPage() {
+  const router = useRouter();
   const [tasks, setTasks] = useState<Task[]>(INITIAL_TASKS);
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
@@ -459,8 +469,9 @@ export default function KanbanPage() {
             { icon: "☰", label: "Tasks", badge: "12", active: true },
             { icon: "💬", label: "Chat", badge: "3", active: false },
             { icon: "📄", label: "Docs", badge: null, active: false },
+            { icon: "📊", label: "Analytics", badge: null, active: false },
           ].map(({ icon, label, badge, active }) => (
-            <div key={label} style={{
+            <div key={label} onClick={() => router.push(NAV_ROUTES[label])} style={{
               display: "flex", alignItems: "center", gap: 10, padding: "9px 12px", borderRadius: 10,
               fontSize: 13, color: active ? "#fff" : "rgba(255,255,255,0.7)", cursor: "pointer",
               background: active ? "rgba(255,255,255,0.15)" : "transparent", fontWeight: active ? 500 : 400,
