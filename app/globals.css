@@ -1,5 +1,4 @@
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500&display=swap');
 
 /* ── Auth page ── */
 .auth-wrap { display: grid; grid-template-columns: 1fr 1fr; width: 100%; max-width: 880px; border-radius: 20px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.4); background: #fff; position: relative; z-index: 1; }
