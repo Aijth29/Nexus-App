@@ -36,6 +36,7 @@ export default function ChatPage() {
   const bottomRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const emojiRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -77,19 +78,40 @@ export default function ChatPage() {
   }, [messages]);
 
   const sendMessage = async () => {
-    if (!input.trim() || sending) return;
+    const text = inputRef.current?.value.trim() ?? input.trim();
+    if ((!text && !attachment) || sending) return;
     setSending(true);
+
+    let content = text;
+
+    if (attachment) {
+      const fileContent = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        if (attachment.type.startsWith("image/")) {
+          reader.readAsDataURL(attachment);
+        } else {
+          resolve(`📎 ${attachment.name} (${(attachment.size / 1024).toFixed(1)} KB)`);
+        }
+      });
+      content = attachment.type.startsWith("image/")
+        ? (text ? `${text}\n__img__${fileContent}` : `__img__${fileContent}`)
+        : (text ? `${text}\n${fileContent}` : fileContent);
+      setAttachment(null);
+      if (fileRef.current) fileRef.current.value = "";
+    }
+
     await fetch("/api/chat/send", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ content: input.trim(), roomId }),
+      body: JSON.stringify({ content, roomId }),
     });
     setInput("");
     setSending(false);
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
       e.preventDefault();
       sendMessage();
     }
@@ -177,8 +199,15 @@ export default function ChatPage() {
                       <span style={{ fontSize: 11, color: "#4a4870" }}>{formatTime(msg.createdAt)}</span>
                     </div>
                   )}
-                  <div style={{ fontSize: 14, color: "#c4c0e8", lineHeight: 1.5, background: "transparent" }}>
-                    {msg.content}
+                  <div style={{ fontSize: 14, color: "#c4c0e8", lineHeight: 1.5 }}>
+                    {msg.content.includes("__img__") ? (
+                      <>
+                        {msg.content.split("__img__")[0] && (
+                          <div>{msg.content.split("__img__")[0]}</div>
+                        )}
+                        <img src={msg.content.split("__img__")[1]} alt="attachment" style={{ maxWidth: 280, borderRadius: 10, marginTop: 6, display: "block" }} />
+                      </>
+                    ) : msg.content}
                   </div>
                 </div>
               </div>
@@ -210,6 +239,7 @@ export default function ChatPage() {
             >📎</button>
 
             <input
+              ref={inputRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
