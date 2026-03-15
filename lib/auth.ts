@@ -4,9 +4,6 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import bcrypt from "bcryptjs";
 import type { NextAuthOptions } from "next-auth";
 
-const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
-const prisma = new PrismaClient({ adapter });
-
 export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
@@ -18,16 +15,26 @@ export const authOptions: NextAuthOptions = {
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
 
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email },
-        });
+        try {
+          const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
+          const prisma = new PrismaClient({ adapter });
 
-        if (!user || !user.password) return null;
+          const user = await prisma.user.findUnique({
+            where: { email: credentials.email },
+          });
 
-        const isValid = await bcrypt.compare(credentials.password, user.password);
-        if (!isValid) return null;
+          await prisma.$disconnect();
 
-        return { id: user.id, name: user.name, email: user.email };
+          if (!user || !user.password) return null;
+
+          const isValid = await bcrypt.compare(credentials.password, user.password);
+          if (!isValid) return null;
+
+          return { id: user.id, name: user.name, email: user.email };
+        } catch (err) {
+          console.error("Auth error:", err);
+          return null;
+        }
       },
     }),
   ],
