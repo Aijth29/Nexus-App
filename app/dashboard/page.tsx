@@ -305,6 +305,83 @@ const Column = ({
   </div>
 );
 
+// ─── Add Task Modal ───────────────────────────────────────────────────────────
+
+const AddTaskModal = ({
+  columnId,
+  onClose,
+  onAdd,
+}: {
+  columnId: ColumnId;
+  onClose: () => void;
+  onAdd: (task: Task) => void;
+}) => {
+  const [title, setTitle] = useState("");
+  const [priority, setPriority] = useState<Priority>("medium");
+
+  const submit = () => {
+    if (!title.trim()) return;
+    onAdd({
+      id: `task-${Date.now()}`,
+      title: title.trim(),
+      tags: [],
+      priority,
+      comments: 0,
+      assignees: [{ initials: "AJ", color: "#6c5ce7", bg: "#f0eeff" }],
+      columnId,
+    });
+    onClose();
+  };
+
+  return (
+    <div
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      style={{ position: "fixed", inset: 0, background: "rgba(10,8,20,0.55)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center" }}
+    >
+      <div style={{ background: "#fff", borderRadius: 18, width: 420, padding: "1.75rem", boxShadow: "0 20px 60px rgba(108,92,231,0.2)" }}>
+        <div style={{ fontFamily: "'Syne',sans-serif", fontSize: 18, fontWeight: 800, marginBottom: 16, background: "linear-gradient(135deg,#6c5ce7,#e84393)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+          Add Task
+        </div>
+
+        <label style={{ fontSize: 12, fontWeight: 600, color: "#6b6b8a", display: "block", marginBottom: 6 }}>Title *</label>
+        <input
+          autoFocus
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && submit()}
+          placeholder="Task title…"
+          style={{ width: "100%", boxSizing: "border-box", padding: "9px 12px", border: "1.5px solid rgba(108,92,231,0.2)", borderRadius: 10, fontSize: 13, fontFamily: "'DM Sans',sans-serif", outline: "none", marginBottom: 14 }}
+        />
+
+        <label style={{ fontSize: 12, fontWeight: 600, color: "#6b6b8a", display: "block", marginBottom: 6 }}>Priority</label>
+        <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
+          {(["high", "medium", "low"] as Priority[]).map((p) => (
+            <button
+              key={p}
+              onClick={() => setPriority(p)}
+              style={{
+                flex: 1, padding: "7px 0", borderRadius: 9, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans',sans-serif", transition: "all .15s",
+                background: priority === p ? "linear-gradient(135deg,#6c5ce7,#e84393)" : "#f5f4ff",
+                color: priority === p ? "#fff" : "#6b6b8a",
+                border: priority === p ? "none" : "1.5px solid rgba(108,92,231,0.12)",
+              }}
+            >{p.charAt(0).toUpperCase() + p.slice(1)}</button>
+          ))}
+        </div>
+
+        <div style={{ display: "flex", gap: 10 }}>
+          <button onClick={onClose} style={{ flex: 1, padding: "10px 0", borderRadius: 10, fontSize: 13, fontWeight: 500, cursor: "pointer", background: "#f5f4ff", color: "#6b6b8a", border: "none", fontFamily: "'DM Sans',sans-serif" }}>
+            Cancel
+          </button>
+          <button onClick={submit} style={{ flex: 2, padding: "10px 0", borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: "pointer", background: "linear-gradient(135deg,#6c5ce7,#e84393)", color: "#fff", border: "none", boxShadow: "0 4px 12px rgba(108,92,231,0.3)", fontFamily: "'DM Sans',sans-serif" }}>
+            Add Task
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // ─── Modal ────────────────────────────────────────────────────────────────────
 
 const TaskModal = ({ task, onClose }: { task: Task | null; onClose: () => void }) => {
@@ -421,6 +498,7 @@ export default function KanbanPage() {
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [activeFilter, setActiveFilter] = useState("All Tasks");
+  const [addTaskColumn, setAddTaskColumn] = useState<ColumnId | null>(null);
 
   const handleDragStart = (e: React.DragEvent, id: string) => {
     setDraggingId(id);
@@ -523,7 +601,7 @@ export default function KanbanPage() {
                 <button style={{ padding: "8px 16px", borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: "pointer", background: "#fff", border: "1.5px solid rgba(108,92,231,0.2)", color: "#6c5ce7", fontFamily: "'DM Sans', sans-serif" }}>
                   ⚙ Settings
                 </button>
-                <button style={{ padding: "8px 16px", borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: "pointer", background: "linear-gradient(135deg,#6c5ce7,#e84393)", color: "#fff", border: "none", boxShadow: "0 4px 12px rgba(108,92,231,0.3)", fontFamily: "'DM Sans', sans-serif" }}>
+                <button onClick={() => setAddTaskColumn("todo")} style={{ padding: "8px 16px", borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: "pointer", background: "linear-gradient(135deg,#6c5ce7,#e84393)", color: "#fff", border: "none", boxShadow: "0 4px 12px rgba(108,92,231,0.3)", fontFamily: "'DM Sans', sans-serif" }}>
                   + Add Task
                 </button>
               </>
@@ -579,7 +657,7 @@ export default function KanbanPage() {
                 onDragOver={handleDragOver}
                 onDrop={handleDrop}
                 onTaskClick={setSelectedTask}
-                onAddTask={() => {}}
+                onAddTask={() => setAddTaskColumn(col.id)}
               />
             ))}
           </div>
@@ -588,6 +666,15 @@ export default function KanbanPage() {
 
       {/* Task detail modal */}
       {selectedTask && <TaskModal task={selectedTask} onClose={() => setSelectedTask(null)} />}
+
+      {/* Add task modal */}
+      {addTaskColumn && (
+        <AddTaskModal
+          columnId={addTaskColumn}
+          onClose={() => setAddTaskColumn(null)}
+          onAdd={(task) => setTasks((prev) => [...prev, task])}
+        />
+      )}
     </>
   );
 }
