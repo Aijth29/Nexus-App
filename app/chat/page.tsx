@@ -4,6 +4,12 @@ import { useEffect, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
 import Pusher from "pusher-js";
 
+const EMOJIS = [
+  "😀","😂","😍","🥰","😎","🤔","😅","🙏","👍","👎",
+  "🔥","❤️","✅","⚡","🎉","💯","😭","🤣","😊","😢",
+  "👏","🚀","💡","⭐","🎯","💪","🙌","😤","🤯","😱",
+];
+
 interface MessageUser {
   id: string;
   name: string | null;
@@ -25,7 +31,19 @@ export default function ChatPage() {
   const [input, setInput] = useState("");
   const [roomId, setRoomId] = useState("general");
   const [sending, setSending] = useState(false);
+  const [showEmoji, setShowEmoji] = useState(false);
+  const [attachment, setAttachment] = useState<File | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const emojiRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (emojiRef.current && !emojiRef.current.contains(e.target as Node)) setShowEmoji(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
 
   // Load history when room changes
   useEffect(() => {
@@ -171,7 +189,26 @@ export default function ChatPage() {
 
         {/* Input */}
         <div style={{ padding: "1rem 1.5rem", borderTop: "1px solid #1e1b30", background: "#0a0814" }}>
-          <div style={{ display: "flex", gap: 10, alignItems: "center", background: "#1a1830", borderRadius: 12, padding: "10px 14px", border: "1px solid #2e2b45" }}>
+          {/* Attachment preview */}
+          {attachment && (
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8, background: "#1a1830", borderRadius: 8, padding: "6px 12px", border: "1px solid #2e2b45" }}>
+              <span style={{ fontSize: 16 }}>📎</span>
+              <span style={{ fontSize: 12, color: "#a29bfe", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{attachment.name}</span>
+              <button onClick={() => setAttachment(null)} style={{ background: "none", border: "none", color: "#4a4870", cursor: "pointer", fontSize: 16, lineHeight: 1 }}>×</button>
+            </div>
+          )}
+
+          <div style={{ position: "relative", display: "flex", gap: 10, alignItems: "center", background: "#1a1830", borderRadius: 12, padding: "10px 14px", border: "1px solid #2e2b45" }}>
+            {/* Attachment button */}
+            <input ref={fileRef} type="file" style={{ display: "none" }} onChange={(e) => setAttachment(e.target.files?.[0] ?? null)} />
+            <button
+              onClick={() => fileRef.current?.click()}
+              title="Attach file"
+              style={{ background: "none", border: "none", cursor: "pointer", color: "#4a4870", fontSize: 18, display: "flex", alignItems: "center", padding: 0, transition: "color .15s", flexShrink: 0 }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.color = "#a29bfe"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.color = "#4a4870"; }}
+            >📎</button>
+
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
@@ -180,13 +217,42 @@ export default function ChatPage() {
               disabled={!session}
               style={{ flex: 1, background: "transparent", border: "none", outline: "none", color: "#e0deff", fontSize: 14, fontFamily: "'DM Sans', sans-serif" }}
             />
+
+            {/* Emoji button + picker */}
+            <div ref={emojiRef} style={{ position: "relative", flexShrink: 0 }}>
+              <button
+                onClick={() => setShowEmoji((v) => !v)}
+                title="Emoji"
+                style={{ background: "none", border: "none", cursor: "pointer", fontSize: 18, display: "flex", alignItems: "center", padding: 0, transition: "transform .15s", color: showEmoji ? "#a29bfe" : "unset" }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.transform = "scale(1.2)"; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)"; }}
+              >😊</button>
+
+              {showEmoji && (
+                <div style={{
+                  position: "absolute", bottom: "calc(100% + 10px)", right: 0,
+                  background: "#1a1830", border: "1px solid #2e2b45", borderRadius: 12,
+                  padding: 10, display: "grid", gridTemplateColumns: "repeat(6,1fr)", gap: 4,
+                  boxShadow: "0 8px 30px rgba(0,0,0,0.4)", zIndex: 100, width: 210,
+                }}>
+                  {EMOJIS.map((em) => (
+                    <button
+                      key={em}
+                      onClick={() => { setInput((v) => v + em); setShowEmoji(false); }}
+                      style={{ background: "none", border: "none", cursor: "pointer", fontSize: 20, borderRadius: 6, padding: "4px", transition: "background .1s" }}
+                      onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(108,92,231,0.2)"; }}
+                      onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "none"; }}
+                    >{em}</button>
+                  ))}
+                </div>
+              )}
+            </div>
+
             <button
               onClick={sendMessage}
               disabled={!input.trim() || sending || !session}
-              style={{ background: "linear-gradient(135deg,#6c5ce7,#e84393)", border: "none", borderRadius: 8, padding: "6px 14px", color: "#fff", fontSize: 13, fontWeight: 500, cursor: "pointer", opacity: !input.trim() || !session ? 0.4 : 1, transition: "opacity .15s", fontFamily: "'DM Sans', sans-serif" }}
-            >
-              Send
-            </button>
+              style={{ background: "linear-gradient(135deg,#6c5ce7,#e84393)", border: "none", borderRadius: 8, padding: "6px 14px", color: "#fff", fontSize: 13, fontWeight: 500, cursor: "pointer", opacity: !input.trim() || !session ? 0.4 : 1, transition: "opacity .15s", fontFamily: "'DM Sans', sans-serif", flexShrink: 0 }}
+            >Send</button>
           </div>
           {!session && <div style={{ fontSize: 12, color: "#4a4870", marginTop: 6, textAlign: "center" }}>Please log in to send messages</div>}
         </div>
