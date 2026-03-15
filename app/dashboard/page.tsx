@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import NotificationsDropdown from "@/components/NotificationsDropdown";
+import Topbar from "@/components/Topbar";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -515,26 +515,20 @@ export default function KanbanPage() {
         {/* ── Main content ── */}
         <div style={{ display: "flex", flexDirection: "column", overflow: "hidden" }}>
 
-          {/* Topbar */}
-          <div style={{ background: "#fff", borderBottom: "1px solid rgba(108,92,231,0.08)", padding: "1rem 1.5rem", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 20, fontWeight: 800, background: "linear-gradient(135deg,#6c5ce7,#e84393)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-                Nexus App
-              </div>
-              <div style={{ fontSize: 11, background: "#f0eeff", color: "#6c5ce7", padding: "3px 10px", borderRadius: 100, fontWeight: 600 }}>
-                {tasks.length} tasks
-              </div>
-            </div>
-            <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-              <NotificationsDropdown />
-              <button style={{ padding: "8px 16px", borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: "pointer", background: "#fff", border: "1.5px solid rgba(108,92,231,0.2)", color: "#6c5ce7", fontFamily: "'DM Sans', sans-serif" }}>
-                ⚙ Settings
-              </button>
-              <button style={{ padding: "8px 16px", borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: "pointer", background: "linear-gradient(135deg,#6c5ce7,#e84393)", color: "#fff", border: "none", boxShadow: "0 4px 12px rgba(108,92,231,0.3)", fontFamily: "'DM Sans', sans-serif" }}>
-                + Add Task
-              </button>
-            </div>
-          </div>
+          <Topbar
+            title="Nexus App"
+            subtitle={`${tasks.length} tasks`}
+            actions={
+              <>
+                <button style={{ padding: "8px 16px", borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: "pointer", background: "#fff", border: "1.5px solid rgba(108,92,231,0.2)", color: "#6c5ce7", fontFamily: "'DM Sans', sans-serif" }}>
+                  ⚙ Settings
+                </button>
+                <button style={{ padding: "8px 16px", borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: "pointer", background: "linear-gradient(135deg,#6c5ce7,#e84393)", color: "#fff", border: "none", boxShadow: "0 4px 12px rgba(108,92,231,0.3)", fontFamily: "'DM Sans', sans-serif" }}>
+                  + Add Task
+                </button>
+              </>
+            }
+          />
 
           {/* Filter bar */}
           <div style={{ background: "#fff", borderBottom: "1px solid rgba(108,92,231,0.06)", padding: ".875rem 1.5rem", display: "flex", alignItems: "center", gap: 8 }}>
