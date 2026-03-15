@@ -49,21 +49,28 @@ export default function AuthPage() {
   };
 
   const handleLogin = async () => {
+    if (!loginEmail || !loginPassword) {
+      setError("Please enter your email and password.");
+      return;
+    }
     setLoading(true);
     setError("");
     try {
       const res = await signIn("credentials", {
-        email: loginEmail,
+        email: loginEmail.trim().toLowerCase(),
         password: loginPassword,
         redirect: false,
       });
       if (res?.ok) {
         window.location.href = "/dashboard";
       } else {
-        setError("Invalid email or password");
+        setError(res?.error === "CredentialsSignin"
+          ? "Incorrect email or password. Please try again."
+          : res?.error || "Sign in failed. Please try again.");
       }
-    } catch (err) {
-      setError("Something went wrong. Please try again.");
+    } catch (err: unknown) {
+      setError("Connection error. Is the server running?");
+      console.error("Login error:", err);
     }
     setLoading(false);
   };
