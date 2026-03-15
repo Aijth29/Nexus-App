@@ -665,7 +665,7 @@ export default function KanbanPage() {
             subtitle={`${tasks.length} tasks`}
             actions={
               <>
-                <button style={{ padding: "8px 16px", borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: "pointer", background: "#fff", border: "1.5px solid rgba(108,92,231,0.2)", color: "#6c5ce7", fontFamily: "'DM Sans', sans-serif" }}>
+                <button onClick={() => router.push("/settings")} style={{ padding: "8px 16px", borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: "pointer", background: "#fff", border: "1.5px solid rgba(108,92,231,0.2)", color: "#6c5ce7", fontFamily: "'DM Sans', sans-serif" }}>
                   ⚙ Settings
                 </button>
                 <button onClick={() => setAddTaskColumn("todo")} style={{ padding: "8px 16px", borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: "pointer", background: "linear-gradient(135deg,#6c5ce7,#e84393)", color: "#fff", border: "none", boxShadow: "0 4px 12px rgba(108,92,231,0.3)", fontFamily: "'DM Sans', sans-serif" }}>
