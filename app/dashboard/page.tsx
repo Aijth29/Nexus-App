@@ -65,6 +65,15 @@ const PriorityBadge = ({ priority }: { priority: Priority }) => {
 
 // ─── Column Config ────────────────────────────────────────────────────────────
 
+// ─── Team Members ─────────────────────────────────────────────────────────────
+
+const TEAM_MEMBERS: { initials: string; color: string; bg: string; name: string }[] = [
+  { initials: "AJ", color: "#6c5ce7", bg: "#f0eeff", name: "Ajith M." },
+  { initials: "JM", color: "#00b894", bg: "#e0fff6", name: "John M." },
+  { initials: "SR", color: "#e84393", bg: "#ffeaf5", name: "Sarah R." },
+  { initials: "KP", color: "#0099cc", bg: "#e0f5ff", name: "Kiran P." },
+];
+
 const COLUMNS: { id: ColumnId; label: string; icon: string; color: string; bg: string; border: string; addBorder: string }[] = [
   { id: "todo",       label: "To Do",       icon: "📋", color: "#6c5ce7", bg: "linear-gradient(180deg,#f0eeff,#f8f6ff)", border: "rgba(108,92,231,0.15)", addBorder: "rgba(108,92,231,0.2)" },
   { id: "inprogress", label: "In Progress", icon: "⚡", color: "#0099cc", bg: "linear-gradient(180deg,#e0f5ff,#f8fbff)", border: "rgba(0,153,204,0.15)",   addBorder: "rgba(0,153,204,0.2)" },
@@ -307,6 +316,45 @@ const Column = ({
 
 // ─── Add Task Modal ───────────────────────────────────────────────────────────
 
+const AssigneePicker = ({
+  selected,
+  onChange,
+}: {
+  selected: typeof TEAM_MEMBERS;
+  onChange: (members: typeof TEAM_MEMBERS) => void;
+}) => {
+  const toggle = (m: typeof TEAM_MEMBERS[0]) => {
+    const exists = selected.some((s) => s.initials === m.initials);
+    onChange(exists ? selected.filter((s) => s.initials !== m.initials) : [...selected, m]);
+  };
+  return (
+    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+      {TEAM_MEMBERS.map((m) => {
+        const active = selected.some((s) => s.initials === m.initials);
+        return (
+          <div
+            key={m.initials}
+            onClick={() => toggle(m)}
+            title={m.name}
+            style={{
+              display: "flex", alignItems: "center", gap: 6, padding: "5px 10px 5px 6px",
+              borderRadius: 100, cursor: "pointer", transition: "all .15s",
+              border: `1.5px solid ${active ? m.color : "rgba(108,92,231,0.12)"}`,
+              background: active ? m.bg : "#fff",
+            }}
+          >
+            <div style={{ width: 22, height: 22, borderRadius: "50%", background: m.bg, color: m.color, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontWeight: 700 }}>
+              {m.initials}
+            </div>
+            <span style={{ fontSize: 11, fontWeight: active ? 600 : 400, color: active ? m.color : "#6b6b8a", fontFamily: "'DM Sans',sans-serif" }}>{m.name}</span>
+            {active && <span style={{ fontSize: 10, color: m.color }}>✓</span>}
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
 const AddTaskModal = ({
   columnId,
   onClose,
@@ -318,6 +366,7 @@ const AddTaskModal = ({
 }) => {
   const [title, setTitle] = useState("");
   const [priority, setPriority] = useState<Priority>("medium");
+  const [assignees, setAssignees] = useState<typeof TEAM_MEMBERS>([TEAM_MEMBERS[0]]);
 
   const submit = () => {
     if (!title.trim()) return;
@@ -327,7 +376,7 @@ const AddTaskModal = ({
       tags: [],
       priority,
       comments: 0,
-      assignees: [{ initials: "AJ", color: "#6c5ce7", bg: "#f0eeff" }],
+      assignees,
       columnId,
     });
     onClose();
@@ -354,7 +403,7 @@ const AddTaskModal = ({
         />
 
         <label style={{ fontSize: 12, fontWeight: 600, color: "#6b6b8a", display: "block", marginBottom: 6 }}>Priority</label>
-        <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
+        <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
           {(["high", "medium", "low"] as Priority[]).map((p) => (
             <button
               key={p}
@@ -367,6 +416,11 @@ const AddTaskModal = ({
               }}
             >{p.charAt(0).toUpperCase() + p.slice(1)}</button>
           ))}
+        </div>
+
+        <label style={{ fontSize: 12, fontWeight: 600, color: "#6b6b8a", display: "block", marginBottom: 8 }}>Assignees</label>
+        <div style={{ marginBottom: 20 }}>
+          <AssigneePicker selected={assignees} onChange={setAssignees} />
         </div>
 
         <div style={{ display: "flex", gap: 10 }}>
@@ -384,9 +438,10 @@ const AddTaskModal = ({
 
 // ─── Modal ────────────────────────────────────────────────────────────────────
 
-const TaskModal = ({ task, onClose }: { task: Task | null; onClose: () => void }) => {
+const TaskModal = ({ task, onClose, onUpdateAssignees }: { task: Task | null; onClose: () => void; onUpdateAssignees: (id: string, assignees: typeof TEAM_MEMBERS) => void }) => {
   const [comments, setComments] = useState<Comment[]>(INITIAL_COMMENTS);
   const [input, setInput] = useState("");
+  const [editingAssignees, setEditingAssignees] = useState(false);
 
   if (!task) return null;
 
@@ -422,12 +477,24 @@ const TaskModal = ({ task, onClose }: { task: Task | null; onClose: () => void }
               { label: "Status", value: COLUMNS.find(c => c.id === task.columnId)?.label || "—" },
               {
                 label: "Assignees", value: (
-                  <div style={{ display: "flex", gap: 4, marginTop: 4 }}>
-                    {task.assignees.map((a, i) => (
-                      <div key={i} style={{ width: 24, height: 24, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontWeight: 700, background: a.bg, color: a.color }}>
-                        {a.initials}
-                      </div>
-                    ))}
+                  <div>
+                    <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginTop: 4, marginBottom: editingAssignees ? 8 : 0 }}>
+                      {task.assignees.map((a, i) => (
+                        <div key={i} title={a.initials} style={{ width: 24, height: 24, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontWeight: 700, background: a.bg, color: a.color }}>
+                          {a.initials}
+                        </div>
+                      ))}
+                      <div
+                        onClick={() => setEditingAssignees(!editingAssignees)}
+                        style={{ width: 24, height: 24, borderRadius: "50%", border: "1.5px dashed #bbb", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, color: "#bbb", cursor: "pointer" }}
+                      >{editingAssignees ? "×" : "+"}</div>
+                    </div>
+                    {editingAssignees && (
+                      <AssigneePicker
+                        selected={task.assignees as typeof TEAM_MEMBERS}
+                        onChange={(members) => onUpdateAssignees(task.id, members)}
+                      />
+                    )}
                   </div>
                 )
               },
@@ -665,7 +732,16 @@ export default function KanbanPage() {
       </div>
 
       {/* Task detail modal */}
-      {selectedTask && <TaskModal task={selectedTask} onClose={() => setSelectedTask(null)} />}
+      {selectedTask && (
+        <TaskModal
+          task={selectedTask}
+          onClose={() => setSelectedTask(null)}
+          onUpdateAssignees={(id, assignees) => {
+            setTasks((prev) => prev.map((t) => t.id === id ? { ...t, assignees } : t));
+            setSelectedTask((prev) => prev ? { ...prev, assignees } : prev);
+          }}
+        />
+      )}
 
       {/* Add task modal */}
       {addTaskColumn && (
