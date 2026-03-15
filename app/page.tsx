@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { signOut } from "next-auth/react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -159,6 +161,80 @@ const PriorityBadge = ({ priority }: { priority: "high" | "medium" | "low" }) =>
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
+// ─── Profile Menu ─────────────────────────────────────────────────────────────
+
+function ProfileMenu() {
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const menuItems = [
+    { icon: "👤", label: "View Profile",  action: () => router.push("/settings") },
+    { icon: "⚙️", label: "Settings",      action: () => router.push("/settings") },
+    { icon: "🏢", label: "Workspace",     action: () => router.push("/settings?section=workspace") },
+    { icon: "🔒", label: "Security",      action: () => router.push("/settings?section=password") },
+  ];
+
+  return (
+    <div ref={ref} style={{ marginTop: "auto", position: "relative", zIndex: 10 }}>
+      {open && (
+        <div style={{
+          position: "absolute", bottom: "calc(100% + 8px)", left: 0, right: 0,
+          background: "#fff", borderRadius: 14, boxShadow: "0 12px 40px rgba(0,0,0,0.18)",
+          border: "1.5px solid rgba(108,92,231,0.12)", overflow: "hidden",
+          animation: "dropUp .15s ease",
+        }}>
+          <div style={{ padding: "10px 14px 8px", borderBottom: "1px solid rgba(108,92,231,0.07)" }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#0a0814" }}>Ajith M.</div>
+            <div style={{ fontSize: 11, color: "#aaa" }}>ajith@nexus.app</div>
+          </div>
+          {menuItems.map(({ icon, label, action }) => (
+            <button
+              key={label}
+              onClick={() => { action(); setOpen(false); }}
+              style={{ width: "100%", display: "flex", alignItems: "center", gap: 9, padding: "9px 14px", border: "none", background: "transparent", fontSize: 13, color: "#0a0814", cursor: "pointer", fontFamily: "'DM Sans', sans-serif", textAlign: "left", transition: "background .1s" }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "#f8f6ff"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "transparent"; }}
+            >
+              <span>{icon}</span>{label}
+            </button>
+          ))}
+          <div style={{ borderTop: "1px solid rgba(232,67,147,0.1)", padding: "4px 0 4px" }}>
+            <button
+              onClick={() => signOut({ callbackUrl: "/auth" })}
+              style={{ width: "100%", display: "flex", alignItems: "center", gap: 9, padding: "9px 14px", border: "none", background: "transparent", fontSize: 13, color: "#e84393", cursor: "pointer", fontFamily: "'DM Sans', sans-serif", textAlign: "left", fontWeight: 600, transition: "background .1s" }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "#ffeaf5"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "transparent"; }}
+            >
+              <span>🚪</span>Sign out
+            </button>
+          </div>
+        </div>
+      )}
+      <div
+        onClick={() => setOpen(!open)}
+        style={{ padding: "10px 12px", borderRadius: 10, cursor: "pointer", background: open ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.1)", display: "flex", alignItems: "center", gap: 8, border: open ? "1px solid rgba(255,255,255,0.3)" : "1px solid transparent", transition: "all .2s", position: "relative", zIndex: 1 }}
+      >
+        <div style={{ width: 32, height: 32, borderRadius: "50%", background: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 600, color: "#fff", border: "2px solid rgba(255,255,255,0.3)", flexShrink: 0 }}>AJ</div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 12, fontWeight: 500, color: "#fff" }}>Ajith M.</div>
+          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.5)" }}>Owner</div>
+        </div>
+        <span style={{ fontSize: 10, color: "rgba(255,255,255,0.5)", transition: "transform .2s", transform: open ? "rotate(180deg)" : "none" }}>▲</span>
+      </div>
+      <style>{`@keyframes dropUp { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }`}</style>
+    </div>
+  );
+}
+
 export default function HomePage() {
   const [tasks, setTasks] = useState<Task[]>(RECENT_TASKS);
 
@@ -206,10 +282,7 @@ export default function HomePage() {
               <div style={{ width: 8, height: 8, borderRadius: "50%", background: color, flexShrink: 0 }} />{name}
             </div>
           ))}
-          <div style={{ marginTop: "auto", padding: "10px 12px", borderRadius: 10, background: "rgba(255,255,255,0.1)", display: "flex", alignItems: "center", gap: 8, position: "relative", zIndex: 1 }}>
-            <div style={{ width: 32, height: 32, borderRadius: "50%", background: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 600, color: "#fff", border: "2px solid rgba(255,255,255,0.3)" }}>AJ</div>
-            <div><div style={{ fontSize: 12, fontWeight: 500, color: "#fff" }}>Ajith M.</div><div style={{ fontSize: 10, color: "rgba(255,255,255,0.5)" }}>Owner</div></div>
-          </div>
+          <ProfileMenu />
         </div>
 
         {/* ── Main ────────────────────────────────────────────────────────── */}
