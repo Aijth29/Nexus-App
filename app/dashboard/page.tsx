@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import NotificationsDropdown from "@/components/NotificationsDropdown";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -524,7 +525,8 @@ export default function KanbanPage() {
                 {tasks.length} tasks
               </div>
             </div>
-            <div style={{ display: "flex", gap: 10 }}>
+            <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+              <NotificationsDropdown />
               <button style={{ padding: "8px 16px", borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: "pointer", background: "#fff", border: "1.5px solid rgba(108,92,231,0.2)", color: "#6c5ce7", fontFamily: "'DM Sans', sans-serif" }}>
                 ⚙ Settings
               </button>
